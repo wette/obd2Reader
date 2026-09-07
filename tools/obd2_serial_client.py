@@ -56,6 +56,18 @@ class ObdSerialClient:
             self._handle_unsolicited_line(line)
         raise TimeoutError("Did not receive READY from Arduino")
 
+    def set_offline_mode(self, enabled: bool) -> None:
+        expected = "OFFLINE ON" if enabled else "OFFLINE OFF"
+        self.send_command(expected)
+
+        while True:
+            line = self._read_line(max_wait_s=5.0)
+            if line == expected:
+                return
+            if line == f"ERR Unknown command: {expected}":
+                raise RuntimeError(line)
+            self._handle_unsolicited_line(line)
+
     def read_dtcs(self) -> None:
         self.send_command("READ")
 
@@ -114,6 +126,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="BMW E87 OBD-II DTC serial client")
     parser.add_argument("--port", required=True, help="Serial port, e.g. /dev/ttyUSB0 or COM3")
     parser.add_argument("--baud", type=int, default=115200, help="Baud rate (default: 115200)")
+    parser.add_argument("--offline", action="store_true", help="Enable Arduino offline simulation mode")
     parser.add_argument("--clear", action="store_true", help="Clear DTCs after reading")
     parser.add_argument("--no-read", action="store_true", help="Skip reading DTCs")
     return parser.parse_args()
@@ -130,6 +143,9 @@ def main() -> int:
 
     try:
         client.wait_until_ready()
+
+        if args.offline:
+            client.set_offline_mode(True)
 
         if not args.no_read:
             client.read_dtcs()
