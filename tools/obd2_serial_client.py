@@ -66,6 +66,8 @@ class ObdSerialClient:
                 return
             if line == f"ERR Unknown command: {expected}":
                 raise RuntimeError(line)
+            if line.startswith("ERR "):
+                continue
             self._handle_unsolicited_line(line)
 
     def read_dtcs(self) -> None:
