@@ -42,6 +42,7 @@ Serial output protocol:
 ## 2) Python client
 
 File: `/home/runner/work/obd2Reader/obd2Reader/tools/obd2_serial_client.py`
+Full DTC dictionary: `/home/runner/work/obd2Reader/obd2Reader/tools/dtc_descriptions.py`
 
 ### Requirements
 - Python 3.8+
@@ -73,4 +74,4 @@ Skip initial read and only allow clear flow:
 python /home/runner/work/obd2Reader/obd2Reader/tools/obd2_serial_client.py --port /dev/ttyUSB0 --no-read --clear
 ```
 
-The Python script converts each `DTC` code to a human-readable description when known, and falls back to a generic category description when unknown.
+The Python script uses a dedicated DTC dictionary file with a comprehensive OBD-II code list, and falls back to a generic category description only if a code is not present in that list.

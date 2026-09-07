@@ -2,31 +2,9 @@
 import argparse
 import sys
 import time
-from typing import Dict
 
 import serial
-
-
-DTC_DESCRIPTIONS: Dict[str, str] = {
-    "P0100": "Mass or Volume Air Flow Circuit Malfunction",
-    "P0110": "Intake Air Temperature Circuit Malfunction",
-    "P0120": "Throttle/Pedal Position Sensor/Switch A Circuit Malfunction",
-    "P0130": "O2 Sensor Circuit Malfunction (Bank 1 Sensor 1)",
-    "P0171": "System Too Lean (Bank 1)",
-    "P0174": "System Too Lean (Bank 2)",
-    "P0200": "Injector Circuit Malfunction",
-    "P0300": "Random/Multiple Cylinder Misfire Detected",
-    "P0301": "Cylinder 1 Misfire Detected",
-    "P0302": "Cylinder 2 Misfire Detected",
-    "P0303": "Cylinder 3 Misfire Detected",
-    "P0304": "Cylinder 4 Misfire Detected",
-    "P0420": "Catalyst System Efficiency Below Threshold (Bank 1)",
-    "P0430": "Catalyst System Efficiency Below Threshold (Bank 2)",
-    "P0440": "Evaporative Emission Control System Malfunction",
-    "P0500": "Vehicle Speed Sensor Malfunction",
-    "P0562": "System Voltage Low",
-    "P0700": "Transmission Control System Malfunction",
-}
+from dtc_descriptions import DTC_DESCRIPTIONS
 
 
 def describe_dtc(code: str) -> str:
