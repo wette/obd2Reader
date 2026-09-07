@@ -29,6 +29,8 @@ The sketch:
 - Accepts serial commands:
   - `READ`  -> read current DTCs
   - `CLEAR` -> clear DTCs
+  - `OFFLINE ON` -> enable dummy DTC simulation without an OBD-II connection
+  - `OFFLINE OFF` -> return to live OBD-II reads
 
 Serial output protocol:
 - `READY`
@@ -73,5 +75,13 @@ Skip initial read and only allow clear flow:
 ```bash
 python /home/runner/work/obd2Reader/obd2Reader/tools/obd2_serial_client.py --port /dev/ttyUSB0 --no-read --clear
 ```
+
+Run the full serial flow without a vehicle attached by enabling offline mode first:
+
+```bash
+python /home/runner/work/obd2Reader/obd2Reader/tools/obd2_serial_client.py --port /dev/ttyUSB0 --offline
+```
+
+In offline mode, the Arduino reports dummy DTCs (`P0301`, `P0171`, `U0121`) and treats `CLEAR` as a successful clear so the end-to-end workflow can be exercised on the bench.
 
 The Python script uses a dedicated DTC dictionary file with a comprehensive OBD-II code list, and falls back to a generic category description only if a code is not present in that list.

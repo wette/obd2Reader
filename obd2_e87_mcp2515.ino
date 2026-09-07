@@ -11,14 +11,20 @@
 static const uint8_t MCP2515_CS_PIN = 10;
 static const uint32_t CAN_REQUEST_ID = 0x7DF;
 static const uint16_t RESPONSE_TIMEOUT_MS = 1500;
+static const char *OFFLINE_DTC_CODES[] = {"P0301", "P0171", "U0121"};
 
 MCP2515 mcp2515(MCP2515_CS_PIN);
+bool offlineMode = false;
+bool offlineDTCsActive = true;
 
 bool sendObdRequest(uint8_t mode);
 bool receiveObdPayload(uint8_t expectedMode, uint8_t *buffer, size_t &payloadLen, size_t maxLen);
 void readAndPrintDTCs();
 void clearDTCs();
 void flushCanRx();
+void setOfflineMode(bool enabled);
+void printOfflineDTCs();
+void printDTCLine(const char *code);
 
 void setup() {
   Serial.begin(115200);
@@ -42,7 +48,7 @@ void setup() {
   }
 
   Serial.println("READY");
-  Serial.println("INFO Commands: READ, CLEAR");
+  Serial.println("INFO Commands: READ, CLEAR, OFFLINE ON, OFFLINE OFF");
 
   // Requirement: report current errors via serial.
   readAndPrintDTCs();
@@ -61,10 +67,20 @@ void loop() {
     readAndPrintDTCs();
   } else if (command == "CLEAR") {
     clearDTCs();
+  } else if (command == "OFFLINE ON") {
+    setOfflineMode(true);
+  } else if (command == "OFFLINE OFF") {
+    setOfflineMode(false);
   } else if (command.length() > 0) {
     Serial.print("ERR Unknown command: ");
     Serial.println(command);
   }
+}
+
+void setOfflineMode(bool enabled) {
+  offlineMode = enabled;
+  offlineDTCsActive = enabled;
+  Serial.println(enabled ? "OFFLINE ON" : "OFFLINE OFF");
 }
 
 void flushCanRx() {
@@ -189,6 +205,11 @@ bool receiveObdPayload(uint8_t expectedMode, uint8_t *buffer, size_t &payloadLen
 }
 
 void readAndPrintDTCs() {
+  if (offlineMode) {
+    printOfflineDTCs();
+    return;
+  }
+
   flushCanRx();
 
   if (!sendObdRequest(0x03)) {
@@ -252,7 +273,33 @@ void readAndPrintDTCs() {
   Serial.println(dtcCount);
 }
 
+void printOfflineDTCs() {
+  if (!offlineDTCsActive) {
+    Serial.println("END 0");
+    return;
+  }
+
+  const size_t dtcCount = sizeof(OFFLINE_DTC_CODES) / sizeof(OFFLINE_DTC_CODES[0]);
+  for (size_t i = 0; i < dtcCount; ++i) {
+    printDTCLine(OFFLINE_DTC_CODES[i]);
+  }
+
+  Serial.print("END ");
+  Serial.println(dtcCount);
+}
+
+void printDTCLine(const char *code) {
+  Serial.print("DTC ");
+  Serial.println(code);
+}
+
 void clearDTCs() {
+  if (offlineMode) {
+    offlineDTCsActive = false;
+    Serial.println("CLEAR OK");
+    return;
+  }
+
   flushCanRx();
 
   if (!sendObdRequest(0x04)) {
